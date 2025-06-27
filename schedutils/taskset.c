@@ -186,7 +186,15 @@ int main(int argc, char **argv)
 			all_tasks = 1;
 			break;
 		case 'p':
-			pid = strtopid_or_err(argv[argc - 1], _("invalid PID argument"));
+			// Like strtopid_or_err() but accept 0 for this process,
+			// like sched_getaffinity()/sched_setaffinity() do.
+			pid = (pid_t) str2num_or_err(
+				argv[argc - 1], 10, _("invalid PID argument"),
+				0, SINT_MAX(pid_t));
+			if (pid == 0)
+				pid = getpid();
+			// After this point, pid == 0 means "no pid" and that
+			// we will exec a command.
 			break;
 		case 'c':
 			ts.use_list = 1;
